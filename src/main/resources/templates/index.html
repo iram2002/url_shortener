@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener</title>
+    <style>
+        body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        flex-direction: column;
+        }
+
+        #custom-prompt {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #fff;
+        border: 2px solid #ddd;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        text-align: center;
+        border-radius: 8px;
+        width: 300px;
+        }
+
+        #custom-prompt h2 {
+        margin: 0;
+        font-size: 18px;
+        margin-bottom: 20px;
+        }
+
+        .btn {
+        padding: 10px 20px;
+        margin: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s;
+        }
+
+        .btn-logout {
+        background-color: #f44336;
+        color: #fff;
+        }
+
+        .btn-login {
+        background-color: #4CAF50;
+        color: #fff;
+        }
+
+        .btn:hover {
+        opacity: 0.8;
+        }
+
+        #overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        display: none;
+        }
+
+        .container {
+        width: 80%;
+        max-width: 600px;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        text-align: center;
+        }
+
+        header h1 {
+        font-size: 2rem;
+        color: #333;
+        }
+
+        header p {
+        font-size: 1rem;
+        color: #666;
+        }
+
+        .form-container input {
+        width: 80%;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        font-size: 1rem;
+        }
+
+        .form-container button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1rem;
+        }
+
+        .form-container button:hover {
+        background-color: #0056b3;
+        }
+
+        .prompt-container {
+        background-color: #f9f9f9;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 30px;
+        }
+
+        .button-container button {
+        padding: 10px 20px;
+        margin: 10px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1rem;
+        }
+
+        .button-container button:hover {
+        background-color: #218838;
+        }
+
+        .button-container button:nth-child(2) {
+        background-color: #dc3545;
+        }
+
+        .button-container button:nth-child(2):hover {
+        background-color: #c82333;
+        }
+
+        footer {
+        margin-top: 30px;
+        font-size: 0.8rem;
+        color: #888;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>URL Shortener</h1>
+        <button th:if=${!loggedIn}" id="auth-btn" class="btn btn-login" onclick="window.location.href='/login'">Login / Sign Up</button>
+        <button th:if="${loggedIn}" id="logout-btn" class="btn btn-logout" style="display: none;" onclick="logout()">Logout</button>
+        <p id="welcome-message">Enter the URL you want to shorten below:</p>
+    </header>
+
+    <!-- Anonymous URL Shortening -->
+    <div class="form-container" id="anonymous-form" th:if="${!loggedIn}">
+        <form th:action="@{/generate-url}" method="POST">
+            <input type="url" name="originalUrl" placeholder="Enter URL" required />
+            <button type="submit">Generate Short URL</button>
+        </form>
+    </div>
+
+    <!-- Custom URL for Logged-in Users -->
+    <div class="form-container" id="custom-url-form" style="display: none;" th:if="${loggedIn}">>
+        <form th:action="@{/generate-custom-url}" method="POST">
+            <label>
+                <input type="url" name="originalUrl" placeholder="Enter URL" required />
+            </label>
+            <label>
+                <input type="text" name="customAlias" placeholder="Enter Custom URL (e.g., my-short-link)" required />
+            </label>
+            <button type="submit">Generate Custom Short URL</button>
+        </form>
+    </div>
+</div>
+
+<!-- Prompt for users to log in (only shown to anonymous users) -->
+<div id="overlay" th:if="${!loggedIn}">
+<div id="custom-prompt" th:if="${!loggedIn}" style="display: none;">
+    <h2>Would you like to log in? and get your customized URL? It's free!</h2>
+    <button class="btn btn-logout" id="stay-logged-out">Stay Logged Out</button>
+    <button class="btn btn-login" id="login-signup"  onclick="window.location.href='/login'">Login / Sign Up</button>
+</div></div>
+
+<script>
+    window.onload = function() {
+        setTimeout(function(){
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('custom-prompt').style.display = 'block';
+        }, 2000);
+
+        checkLoginStatus();  // Check if user is logged in
+    };
+//hide the prompt if the user chooses to stay logged out
+    document.getElementById('stay-logged-out').onclick = function() {
+        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('custom-prompt').style.display = 'none';
+    };
+
+    document.getElementById('login-signup').onclick = function() {
+        window.location.href = 'login.html';
+    };
+
+    function checkLoginStatus() {
+        fetch('/auth/check-login')
+            .then(response => response.json())
+            .then(data => {
+                if (data.loggedIn) {
+                    document.getElementById('auth-btn').style.display = 'none';
+                    document.getElementById('logout-btn').style.display = 'inline-block';
+                    document.getElementById('welcome-message').innerText = 'Welcome, ' + data.username + '! You can create custom URLs.';
+                    document.getElementById('anonymous-form').style.display = 'none';
+                    document.getElementById('custom-url-form').style.display = 'block';
+                }
+            });
+    }
+
+    function logout() {
+        fetch('/auth/logout', { method: 'POST' })
+            .then(() => {
+                window.location.href = '/';
+            });
+    }
+
+    function handleAuth() {
+        window.location.href = "login.html";
+    }
+</script>
+
+<footer>
+    <p>URL Shortener App &copy; 2025</p>
+</footer>
+
+</body>
+</html>

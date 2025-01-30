@@ -159,13 +159,13 @@
 <div class="container">
     <header>
         <h1>URL Shortener</h1>
-        <button th:if=${!loggedIn}" id="auth-btn" class="btn btn-login" onclick="window.location.href='/login'">Login / Sign Up</button>
-        <button th:if="${loggedIn}" id="logout-btn" class="btn btn-logout" style="display: none;" onclick="logout()">Logout</button>
+        <button th:if="${!(loggedIn ?: false)}" id="auth-btn" class="btn btn-login" onclick="window.location.href='/login'">Login / Sign Up</button>
+        <button th:if="${!(loggedIn ?: false)}" id="logout-btn" class="btn btn-logout" style="display: none;" onclick="logout()">Logout</button>
         <p id="welcome-message">Enter the URL you want to shorten below:</p>
     </header>
 
     <!-- Anonymous URL Shortening -->
-    <div class="form-container" id="anonymous-form" th:if="${!loggedIn}">
+    <div class="form-container" id="anonymous-form" th:if="${!(loggedIn ?: false)}">
         <form th:action="@{/generate-url}" method="POST">
             <input type="url" name="originalUrl" placeholder="Enter URL" required />
             <button type="submit">Generate Short URL</button>
@@ -187,11 +187,11 @@
 </div>
 
 <!-- Prompt for users to log in (only shown to anonymous users) -->
-<div id="overlay" th:if="${!loggedIn}">
-<div id="custom-prompt" th:if="${!loggedIn}" style="display: none;">
+<div id="overlay" th:if="${!(loggedIn ?: false)}">
+<div id="custom-prompt" th:if="${!(loggedIn ?: false)}" style="display: none;">
     <h2>Would you like to log in? and get your customized URL? It's free!</h2>
     <button class="btn btn-logout" id="stay-logged-out">Stay Logged Out</button>
-    <button class="btn btn-login" id="login-signup"  onclick="window.location.href='/login'">Login / Sign Up</button>
+    <button class="btn btn-login" id="login-signup" onclick="window.location.href='/login'">Login / Sign Up</button>
 </div></div>
 
 <script>
@@ -210,7 +210,7 @@
     };
 
     document.getElementById('login-signup').onclick = function() {
-        window.location.href = 'login.html';
+        window.location.href = '/login';
     };
 
     function checkLoginStatus() {
@@ -226,14 +226,12 @@
                 }
             });
     }
-
     function logout() {
         fetch('/auth/logout', { method: 'POST' })
             .then(() => {
                 window.location.href = '/';
             });
     }
-
     function handleAuth() {
         window.location.href = "login.html";
     }

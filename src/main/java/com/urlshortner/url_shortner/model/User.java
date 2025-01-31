@@ -1,11 +1,7 @@
 package com.urlshortner.url_shortner.model;
-import jakarta.persistence.*;
-/*import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;*/
-import java.time.LocalDateTime;
 
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
 @Entity
 public class User {
 
@@ -17,6 +13,11 @@ public class User {
     private String password;
     private String email;
     private LocalDateTime createdAt;
+
+    // Constructor
+    public User() {
+        this.createdAt = LocalDateTime.now(); // Automatically set createdAt
+    }
 
     // Getters and Setters
 
@@ -41,7 +42,7 @@ public class User {
     }
 
     public void setPassword(String password) {
-        this.password = password;
+        this.password = password;  // Store the password as-is without hashing
     }
 
     public String getEmail() {

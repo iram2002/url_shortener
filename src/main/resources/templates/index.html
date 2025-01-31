@@ -160,8 +160,17 @@
     <header>
         <h1>URL Shortener</h1>
         <button th:if="${!(loggedIn ?: false)}" id="auth-btn" class="btn btn-login" onclick="window.location.href='/login'">Login / Sign Up</button>
-        <button th:if="${!(loggedIn ?: false)}" id="logout-btn" class="btn btn-logout" style="display: none;" onclick="logout()">Logout</button>
-        <p id="welcome-message">Enter the URL you want to shorten below:</p>
+        <span th:if="${loggedIn}">
+    <form th:action="@{/logout}" method="post">
+        <button id="logout-btn" class="btn btn-logout" type="submit">Logout</button>
+    </form>
+</span>
+
+        <!-- Show Welcome Message if logged in -->
+        <p th:if="${loggedIn}" id="welcome-message">Welcome, <span th:text="${username}"></span>! You can create custom URLs.</p>
+        <!-- Show the anonymous form for URL shortening if not logged in -->
+        <p id="welcome-message" th:if="${!(loggedIn ?: false)}">Enter the URL you want to shorten below:</p>
+
     </header>
 
     <!-- Anonymous URL Shortening -->
@@ -173,7 +182,7 @@
     </div>
 
     <!-- Custom URL for Logged-in Users -->
-    <div class="form-container" id="custom-url-form" style="display: none;" th:if="${loggedIn}">>
+    <div class="form-container" id="custom-url-form" th:if="${loggedIn}">
         <form th:action="@{/generate-custom-url}" method="POST">
             <label>
                 <input type="url" name="originalUrl" placeholder="Enter URL" required />
@@ -184,6 +193,11 @@
             <button type="submit">Generate Custom Short URL</button>
         </form>
     </div>
+    <p th:if="${shortUrl}">
+        Your Shortened URL:
+        <a th:href="${shortUrl}" th:text="${shortUrl}" id="shortUrl"></a>
+        <button onclick="copyToClipboard()">Copy</button>
+    </p>
 </div>
 
 <!-- Prompt for users to log in (only shown to anonymous users) -->
@@ -195,6 +209,25 @@
 </div></div>
 
 <script>
+        function copyToClipboard() {
+            // Get the shortened URL
+            let shortUrl = document.getElementById("shortUrl").innerText;
+
+            // Create a temporary input element
+            let tempInput = document.createElement("input");
+            tempInput.value = shortUrl;
+            document.body.appendChild(tempInput);
+
+            // Select & copy the text
+            tempInput.select();
+            document.execCommand("copy");
+
+            // Remove temporary input
+            document.body.removeChild(tempInput);
+
+            // Show alert (you can replace it with a fancy message)
+            alert("Shortened URL copied to clipboard!");
+        }
     window.onload = function() {
         setTimeout(function(){
             document.getElementById('overlay').style.display = 'block';
@@ -223,15 +256,31 @@
                     document.getElementById('welcome-message').innerText = 'Welcome, ' + data.username + '! You can create custom URLs.';
                     document.getElementById('anonymous-form').style.display = 'none';
                     document.getElementById('custom-url-form').style.display = 'block';
+                    let customForm = document.getElementById('custom-url-form');
                 }
             });
     }
-    function logout() {
-        fetch('/auth/logout', { method: 'POST' })
-            .then(() => {
-                window.location.href = '/';
-            });
-    }
+   function logout() {
+    console.log("Logout request initiated");  // Log the action
+
+    fetch('/auth/logout', {
+        method: 'POST'
+    })
+    .then(response => {
+        console.log("Response received:", response);  // Log the response
+        if (response.ok) {
+            console.log("Logout successful, redirecting...");
+            window.location.href = '/';  // Redirect to the home page after logout
+        } else {
+            console.error('Logout failed, response status:', response.status);
+        }
+    })
+    .catch(error => {
+        console.error('Error during logout:', error);  // Log any error
+    });
+}
+
+
     function handleAuth() {
         window.location.href = "login.html";
     }

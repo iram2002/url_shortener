@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <title>Login</title>
     <style>
@@ -72,6 +72,8 @@
 <h2>Login</h2>
 <div class="form-container">
 <form th:action="@{/login}" method="post">
+
+    <p style="color:red" th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></p>
     <label for="username">Username:</label>
     <input type="text" id="username" name="username" required/><br>
 

@@ -35,21 +35,40 @@ public class ShortUrlService {
         return optionalShortUrl.map(ShortUrl::getLongUrl);
     }
     public String shortenUrlWithCustomAlias(String longUrl, String customAlias) {
-        // Check if the alias is unique (you can check this in your repository)
-        Optional<ShortUrl> existingUrl = shortUrlRepository.findByShortCode(customAlias);
+        String finalAlias = customAlias;
 
+        // Check if the alias is unique (you can check this in your repository)
+        Optional<ShortUrl> existingUrl = shortUrlRepository.findByShortCode(finalAlias);
+
+        // If the alias already exists, generate a new alias by adding random numbers
+        int attempts = 0;
+        while (existingUrl.isPresent() && attempts < 10) {
+            finalAlias = customAlias + generateRandomNumber();  // Add a random number to the alias
+            existingUrl = shortUrlRepository.findByShortCode(finalAlias);  // Check again
+            attempts++;
+        }
+
+        // If still found after 10 attempts, throw an exception (optional)
         if (existingUrl.isPresent()) {
-            throw new IllegalArgumentException("Custom alias already exists.");
+            throw new IllegalArgumentException("Unable to generate a unique alias after several attempts.");
         }
 
         // Create and save the short URL with the custom alias
         ShortUrl shortUrl = new ShortUrl();
         shortUrl.setLongUrl(longUrl);
-        shortUrl.setShortCode(customAlias);
+        shortUrl.setShortCode(finalAlias);
         shortUrlRepository.save(shortUrl);
 
-        return customAlias;
+        return finalAlias;
     }
+
+    // Helper method to generate a random number (used for numeric extension)
+    private String generateRandomNumber() {
+        Random random = new Random();
+        return String.valueOf(random.nextInt(1000)); // Generates a random number between 0 and 999
+    }
+
+
 
 
     // Helper method to generate a random 6-character short code

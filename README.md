@@ -80,4 +80,4 @@ mvn spring-boot:run
 - Deploying to AWS
 
 ## **Authors**  
-- **Iram Naaz** - Developer  
+**Iram Naaz** - Developer  

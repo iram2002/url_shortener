@@ -79,5 +79,5 @@ mvn spring-boot:run
 - Implementing JWT authentication  
 - Deploying to AWS
 
-## **📝 Authors**  
+## **Authors**  
 - **Iram Naaz** - Developer  
